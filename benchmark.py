@@ -12,9 +12,7 @@ import ray
 
 cfg.BenchmarkMode.put(True)
 
-# Create an empty Modin dataframe and throw it away
-# We do this so that we allow Modin to give specific hints for Ray
-t = pd.DataFrame()
+ray.init()
 
 default_path = Path("dataset/")
 
@@ -22,7 +20,13 @@ def ensure_dir(path):
     if not os.path.exists(path):    
         os.makedirs(path)
 
- 
+
+def clear_cache():
+    os.system("sudo sh -c \'echo 1 >/proc/sys/vm/drop_caches\'")
+    os.system("sudo sh -c \'echo 2 >/proc/sys/vm/drop_caches\'")
+    os.system("sudo sh -c \'echo 3 >/proc/sys/vm/drop_caches\'")
+
+
 @click.group()
 def run():
     pass
@@ -46,9 +50,13 @@ def generate_data(path, nrows, nrandom_cols, single_file):
 @click.command(help="Benchmark reading parquet datasets")
 @click.option("--path", type=Path, default=default_path, help="Path for where to read datasets")
 def bench_read_data(path):
+    clear_cache()
+    
     t = time.time()
     pdf = pandas.read_parquet(path)
     pd_read_parquet_time = time.time() - t
+    
+    clear_cache()
 
     t = time.time()
     mdf = pd.read_parquet(path)
@@ -56,7 +64,7 @@ def bench_read_data(path):
     
     print(f"pandas read_parquet time: {pd_read_parquet_time} s")
     print(f"modin read_parquet time: {mpd_read_parquet_time} s")
-    print(f"Original shape: {pdf.shape}\n")
+    print(f"Original shape: {mdf.shape}\n")
 
 
 run.add_command(generate_data)
