@@ -14,7 +14,7 @@ cfg.BenchmarkMode.put(True)
 
 #ray.init()
 
-default_path = Path("default/")
+default_path = Path("dataset/")
 
 def ensure_dir(path):
     if not os.path.exists(path):    
