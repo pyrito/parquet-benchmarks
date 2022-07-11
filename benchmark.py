@@ -34,7 +34,8 @@ def run():
 @click.option("--nrandom-cols", type=int, default=100, help="Number of columns of DataFrame -> parquet (default 100)")
 @click.option("--single-file", is_flag=True, help="If script should output a single parquet file or not")
 def generate_data(path, nrows, nrandom_cols, single_file):
-    ensure_dir(path)
+    if not single_file:
+        ensure_dir(path)
     data = {f"col{i}":  np.random.rand(nrows) for i in range(nrandom_cols)}
     
     df = pandas.DataFrame(data) if single_file else pd.DataFrame(data)
