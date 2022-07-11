@@ -12,7 +12,8 @@ import ray
 
 cfg.BenchmarkMode.put(True)
 
-#ray.init()
+# Create an empty Modin dataframe and throw it away
+t = mpd.DataFrame()
 
 default_path = Path("dataset/")
 
