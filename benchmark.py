@@ -46,7 +46,6 @@ def generate_data(path, nrows, nrandom_cols, single_file):
 @click.command(help="Benchmark reading parquet datasets")
 @click.option("--path", type=Path, default=default_path, help="Path for where to read datasets")
 def bench_read_data(path):
-    ensure_dir(path)
     t = time.time()
     pdf = pandas.read_parquet(path)
     pd_read_parquet_time = time.time() - t
