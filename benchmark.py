@@ -27,6 +27,10 @@ def clear_cache():
     os.system("sudo sh -c \'echo 3 >/proc/sys/vm/drop_caches\'")
 
 
+def warm_cache_df(path):
+    warm_pdf = pandas.read_parquet(path)
+
+
 @click.group()
 def run():
     pass
@@ -49,19 +53,26 @@ def generate_data(path, nrows, nrandom_cols, single_file):
 
 @click.command(help="Benchmark reading parquet datasets")
 @click.option("--path", type=Path, default=default_path, help="Path for where to read datasets")
-def bench_read_data(path):
-    clear_cache()
-    
+@click.option("--clear-cache", is_flag=True, help="If we should clear the cache between every read")
+@click.option("--warm-cache", is_flag=True, help="If we want to keep the cache warm for the dataset read")
+def bench_read_data(path, clear_cache, warm_cache):
+    if warm_cache:
+        warm_cache_df(path)
+ 
+    if clear_cache:
+        clear_cache()
+
     t = time.time()
     pdf = pandas.read_parquet(path)
     pd_read_parquet_time = time.time() - t
     
-    clear_cache()
+    if clear_cache:
+        clear_cache()
 
     t = time.time()
     mdf = pd.read_parquet(path)
     mpd_read_parquet_time = time.time() - t
-    
+
     print(f"pandas read_parquet time: {pd_read_parquet_time} s")
     print(f"modin read_parquet time: {mpd_read_parquet_time} s")
     print(f"Original shape: {mdf.shape}\n")
