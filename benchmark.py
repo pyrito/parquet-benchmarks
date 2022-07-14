@@ -21,7 +21,7 @@ def ensure_dir(path):
         os.makedirs(path)
 
 
-def clear_cache():
+def clear_cache_os():
     os.system("sudo sh -c \'echo 1 >/proc/sys/vm/drop_caches\'")
     os.system("sudo sh -c \'echo 2 >/proc/sys/vm/drop_caches\'")
     os.system("sudo sh -c \'echo 3 >/proc/sys/vm/drop_caches\'")
@@ -61,14 +61,14 @@ def bench_read_data(path, clear_cache, warm_cache):
         warm_cache_df(path)
  
     if clear_cache:
-        clear_cache()
+        clear_cache_os()
 
     t = time.time()
     pdf = pandas.read_parquet(path, columns=['col0'])
     pd_read_parquet_time = time.time() - t
     
     if clear_cache:
-        clear_cache()
+        clear_cache_os()
 
     t = time.time()
     mdf = pd.read_parquet(path, columns=['col0'])
