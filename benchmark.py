@@ -57,6 +57,9 @@ def generate_data(path, nrows, nrandom_cols, single_file, row_group_size):
 @click.option("--clear-cache", is_flag=True, help="If we should clear the cache between every read")
 @click.option("--warm-cache", is_flag=True, help="If we want to keep the cache warm for the dataset read")
 def bench_read_data(path, clear_cache, warm_cache):
+    mdf = pd.DataFrame(np.zeros((1000,1000)))
+    mdf.applymap(lambda x: x+ 1)
+    
     if warm_cache:
         warm_cache_df(path)
  
@@ -69,7 +72,12 @@ def bench_read_data(path, clear_cache, warm_cache):
     
     if clear_cache:
         clear_cache_os()
-
+    
+    # Read it once before to avoid the Ray bug with the deserialize cost? 
+    mdf = pd.read_parquet("/home/ubuntu/parquet-benchmarks/dataset/25000000__1_data.parquet", columns=['col0'])
+    if clear_cache:
+        clear_cache_os()
+    
     t = time.time()
     mdf = pd.read_parquet(path, columns=['col0'])
     mpd_read_parquet_time = time.time() - t
@@ -77,7 +85,9 @@ def bench_read_data(path, clear_cache, warm_cache):
     print(f"pandas read_parquet time: {pd_read_parquet_time} s")
     print(f"modin read_parquet time: {mpd_read_parquet_time} s")
     print(f"Original shape: {mdf.shape}\n")
-
+    
+    time.sleep(2)
+    ray.timeline(f"read_parquet_{mdf.shape[0]}_{mdf.shape[1]}.json")
 
 run.add_command(generate_data)
 run.add_command(bench_read_data)
