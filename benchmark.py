@@ -41,13 +41,14 @@ def run():
 @click.option("--nrows", type=int, default=5000, help="Number of rows of DataFrame -> parquet (default 5000)")
 @click.option("--nrandom-cols", type=int, default=100, help="Number of columns of DataFrame -> parquet (default 100)")
 @click.option("--single-file", is_flag=True, help="If script should output a single parquet file or not")
-def generate_data(path, nrows, nrandom_cols, single_file):
+@click.option("--row-group-size", type=int, default=None, help="Row group size for parquet files")
+def generate_data(path, nrows, nrandom_cols, single_file, row_group_size):
     if not single_file:
         ensure_dir(path)
-    data = {f"col{i}":  np.random.rand(nrows) for i in range(nrandom_cols)}
-    
-    df = pandas.DataFrame(data) if single_file else pd.DataFrame(data)
-    df.to_parquet(str(path))
+    # data = {f"col{i}":  np.random.rand(nrows) for i in range(nrandom_cols)}
+    data = np.random.randint(0, 100, size=(nrows, nrandom_cols))
+    df = pandas.DataFrame(data).add_prefix('col') if single_file else pd.DataFrame(data).add_prefix('col')
+    df.to_parquet(str(path), row_group_size=row_group_size)
     print(f"Parquet files written to {path}")
 
 
@@ -63,14 +64,14 @@ def bench_read_data(path, clear_cache, warm_cache):
         clear_cache()
 
     t = time.time()
-    pdf = pandas.read_parquet(path)
+    pdf = pandas.read_parquet(path, columns=['col0'])
     pd_read_parquet_time = time.time() - t
     
     if clear_cache:
         clear_cache()
 
     t = time.time()
-    mdf = pd.read_parquet(path)
+    mdf = pd.read_parquet(path, columns=['col0'])
     mpd_read_parquet_time = time.time() - t
 
     print(f"pandas read_parquet time: {pd_read_parquet_time} s")
