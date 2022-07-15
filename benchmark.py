@@ -57,9 +57,11 @@ def generate_data(path, nrows, nrandom_cols, single_file, row_group_size):
 @click.option("--clear-cache", is_flag=True, help="If we should clear the cache between every read")
 @click.option("--warm-cache", is_flag=True, help="If we want to keep the cache warm for the dataset read")
 def bench_read_data(path, clear_cache, warm_cache):
-    mdf = pd.DataFrame(np.zeros((1000,1000)))
+    mdf = pd.DataFrame(np.zeros((10000,10000)))
     mdf.applymap(lambda x: x+ 1)
-    
+    # print(mdf._query_compiler._modin_frame._partitions.shape)
+    # print(cfg.NPartitions.get())
+
     if warm_cache:
         warm_cache_df(path)
  
