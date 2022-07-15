@@ -10,8 +10,13 @@ import modin.pandas as pd
 import modin.config as cfg
 import ray
 
+# Enable modin logs
+cfg.LogMode.enable()
+
+# Enable benchmark mode
 cfg.BenchmarkMode.put(True)
 
+# Initialize ray
 ray.init()
 
 default_path = Path("dataset/")
