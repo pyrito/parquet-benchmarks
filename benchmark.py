@@ -11,7 +11,7 @@ import modin.config as cfg
 import ray
 
 # Enable modin logs
-cfg.LogMode.enable()
+# cfg.LogMode.enable()
 
 # Enable benchmark mode
 cfg.BenchmarkMode.put(True)
