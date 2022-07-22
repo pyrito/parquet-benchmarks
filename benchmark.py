@@ -11,7 +11,7 @@ import modin.config as cfg
 import ray
 
 # Enable modin logs
-# cfg.LogMode.enable()
+cfg.LogMode.enable()
 
 # Enable benchmark mode
 cfg.BenchmarkMode.put(True)
@@ -74,8 +74,13 @@ def bench_read_data(path, clear_cache, warm_cache):
         clear_cache_os()
 
     t = time.time()
-    pdf = pandas.read_parquet(path, columns=['col0'])
+    pdf = pandas.read_parquet(path, columns=['col0']) 
     pd_read_parquet_time = time.time() - t
+    
+    # Time dtype retrieval for sanity 
+    dtype_t = time.time()
+    print(pdf.dtypes)
+    dtype_time = time.time() - dtype_t
     
     if clear_cache:
         clear_cache_os()
@@ -88,9 +93,16 @@ def bench_read_data(path, clear_cache, warm_cache):
     t = time.time()
     mdf = pd.read_parquet(path, columns=['col0'])
     mpd_read_parquet_time = time.time() - t
+    
+    # Time dtype retrieval for sanity check
+    mdtype_t = time.time()
+    print(mdf.dtypes)
+    mdtype_time = time.time() - mdtype_t
 
     print(f"pandas read_parquet time: {pd_read_parquet_time} s")
+    print(f"pandas dtype time: {dtype_time} s")
     print(f"modin read_parquet time: {mpd_read_parquet_time} s")
+    print(f"modin dtype time: {mdtype_time} s")
     print(f"Original shape: {mdf.shape}\n")
     
     time.sleep(2)
