@@ -47,12 +47,16 @@ def run():
 @click.option("--nrandom-cols", type=int, default=100, help="Number of columns of DataFrame -> parquet (default 100)")
 @click.option("--single-file", is_flag=True, help="If script should output a single parquet file or not")
 @click.option("--row-group-size", type=int, default=None, help="Row group size for parquet files")
-def generate_data(path, nrows, nrandom_cols, single_file, row_group_size):
+@click.option("--set-index", is_flag=True, help="Set index to a random Int64Index")
+def generate_data(path, nrows, nrandom_cols, single_file, row_group_size, set_index):
     if not single_file:
         ensure_dir(path)
     # data = {f"col{i}":  np.random.rand(nrows) for i in range(nrandom_cols)}
     data = np.random.randint(0, 100, size=(nrows, nrandom_cols))
     df = pandas.DataFrame(data).add_prefix('col') if single_file else pd.DataFrame(data).add_prefix('col')
+    if set_index:
+        print("Setting index...")
+        df = df.set_index(pd.Index(np.random.randint(0, 100, size=nrows)))
     df.to_parquet(str(path), row_group_size=row_group_size)
     print(f"Parquet files written to {path}")
 
@@ -74,13 +78,16 @@ def bench_read_data(path, clear_cache, warm_cache):
         clear_cache_os()
 
     t = time.time()
-    pdf = pandas.read_parquet(path, columns=['col0']) 
+    # pdf = pandas.read_parquet(path, columns=['col0']) 
     pd_read_parquet_time = time.time() - t
     
     # Time dtype retrieval for sanity 
     dtype_t = time.time()
-    print(pdf.dtypes)
+    # print(pdf.dtypes)
     dtype_time = time.time() - dtype_t
+    
+    print(f"pandas read_parquet time: {pd_read_parquet_time} s")
+    print(f"pandas dtype time: {dtype_time} s")
     
     if clear_cache:
         clear_cache_os()
@@ -99,8 +106,6 @@ def bench_read_data(path, clear_cache, warm_cache):
     print(mdf.dtypes)
     mdtype_time = time.time() - mdtype_t
 
-    print(f"pandas read_parquet time: {pd_read_parquet_time} s")
-    print(f"pandas dtype time: {dtype_time} s")
     print(f"modin read_parquet time: {mpd_read_parquet_time} s")
     print(f"modin dtype time: {mdtype_time} s")
     print(f"Original shape: {mdf.shape}\n")
